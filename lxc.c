@@ -851,11 +851,9 @@ Container_clone(Container *self, PyObject *args, PyObject *kwds)
         assert(config_path != NULL);
     }
 
-    struct lxc_container *cont = self->container;
-    Py_BEGIN_ALLOW_THREADS
-    new_container = cont->clone(cont, newname, config_path, flags, bdevtype,
-                                bdevdata, newsize, hookargs);
-    Py_END_ALLOW_THREADS
+    new_container = self->container->clone(self->container, newname,
+                                           config_path, flags, bdevtype,
+                                           bdevdata, newsize, hookargs);
 
     Py_XDECREF(py_config_path);
 
@@ -937,15 +935,9 @@ Container_create(Container *self, PyObject *args, PyObject *kwds)
             return NULL;
         }
     }
-    int success;
-    struct lxc_container *cont = self->container;
 
-    Py_BEGIN_ALLOW_THREADS
-    success = cont->create(cont, template_name, bdevtype, NULL, flags,
-                                             create_args);
-    Py_END_ALLOW_THREADS
-
-    if (success)
+    if (self->container->create(self->container, template_name, bdevtype, NULL,
+                                flags, create_args))
         retval = Py_True;
     else
         retval = Py_False;
@@ -1446,10 +1438,7 @@ Container_snapshot(Container *self, PyObject *args, PyObject *kwds)
         assert(comment_path != NULL);
     }
 
-    struct lxc_container *cont = self->container;
-    Py_BEGIN_ALLOW_THREADS
-    retval = cont->snapshot(cont, comment_path);
-    Py_END_ALLOW_THREADS
+    retval = self->container->snapshot(self->container, comment_path);
 
     Py_XDECREF(py_comment_path);
 
@@ -1475,14 +1464,7 @@ Container_snapshot_destroy(Container *self, PyObject *args, PyObject *kwds)
                                       &name))
         return NULL;
 
-    struct lxc_container *cont = self->container;
-    int success;
-
-    Py_BEGIN_ALLOW_THREADS
-    success = cont->snapshot_destroy(cont, name);
-    Py_END_ALLOW_THREADS
-
-    if (success) {
+    if (self->container->snapshot_destroy(self->container, name)) {
         Py_RETURN_TRUE;
     }
 
@@ -1538,14 +1520,7 @@ Container_snapshot_restore(Container *self, PyObject *args, PyObject *kwds)
                                       &name, &newname))
         return NULL;
 
-    int success;
-    struct lxc_container *cont = self->container;
-
-    Py_BEGIN_ALLOW_THREADS
-    success = cont->snapshot_restore(cont, name, newname);
-    Py_END_ALLOW_THREADS
-
-    if (success) {
+    if (self->container->snapshot_restore(self->container, name, newname)) {
         Py_RETURN_TRUE;
     }
 
@@ -1597,13 +1572,7 @@ Container_start(Container *self, PyObject *args, PyObject *kwds)
         self->container->want_daemonize(self->container, false);
     }
 
-    struct lxc_container *cont = self->container;
-    int success;
-    Py_BEGIN_ALLOW_THREADS;
-    success = cont->start(cont, init_useinit, init_args);
-    Py_END_ALLOW_THREADS;
-
-    if (success)
+    if (self->container->start(self->container, init_useinit, init_args))
         retval = Py_True;
     else
         retval = Py_False;
