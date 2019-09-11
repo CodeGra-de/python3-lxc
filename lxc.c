@@ -192,6 +192,11 @@ struct lxc_attach_python_payload {
     PyObject *arg;
 };
 
+static unsigned long min(unsigned long a, unsigned long b)
+{
+    return a > b ? b : a;
+}
+
 static int lxc_attach_python_exec(void* _payload)
 {
     /* This function is the first one to be called after attaching to a
@@ -205,14 +210,17 @@ static int lxc_attach_python_exec(void* _payload)
     PyObject *result = PyObject_CallFunctionObjArgs(payload->fn,
                                                     payload->arg, NULL);
 
+
     if (!result) {
-        PyErr_Print();
-        return -1;
+        _exit(127);
     }
+
     if (PyLong_Check(result))
-        return (int)PyLong_AsLong(result);
+        _exit((int)min((unsigned long)PyLong_AsLong(result), 127));
     else
-        return -1;
+        _exit(126);
+
+    return -1;
 }
 
 static void lxc_attach_free_options(lxc_attach_options_t *options);
@@ -1611,6 +1619,17 @@ Container_unfreeze(Container *self, PyObject *args, PyObject *kwds)
 }
 
 static PyObject *
+Container_signal_start(Container *self, PyObject *args, PyObject *kwds)
+{
+    Py_BEGIN_ALLOW_THREADS
+    fprintf(stderr, "\0");
+    fflush(stderr);
+    Py_END_ALLOW_THREADS
+
+    Py_RETURN_NONE;
+}
+
+static PyObject *
 Container_wait(Container *self, PyObject *args, PyObject *kwds)
 {
     static char *kwlist[] = {"state", "timeout", NULL};
@@ -1897,6 +1916,8 @@ static PyMethodDef Container_methods[] = {
      "\n"
      "Wait for the container to reach a given state or timeout."
     },
+    {"signal_start", (PyCFunction)Container_signal_start,
+     METH_CLASS|METH_NOARGS, "Signal the start null byte"},
     {NULL, NULL, 0, NULL}
 };
 
