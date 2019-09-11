@@ -1622,7 +1622,7 @@ static PyObject *
 Container_signal_start(Container *self, PyObject *args, PyObject *kwds)
 {
     Py_BEGIN_ALLOW_THREADS
-    fprintf(stderr, "\0");
+    fprintf(stderr, "%c", '\0');
     fflush(stderr);
     Py_END_ALLOW_THREADS
 
