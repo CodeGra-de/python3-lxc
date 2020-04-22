@@ -600,6 +600,14 @@ Container_defined(Container *self, void *closure)
 }
 
 static PyObject *
+Container_last_error(Container *self, void *closure)
+{
+    return Py_BuildValue("si",
+                         self->container->error_string,
+                         self->container->error_num);
+}
+
+static PyObject *
 Container_init_pid(Container *self, void *closure)
 {
     return PyLong_FromLong(self->container->init_pid(self->container));
@@ -1677,6 +1685,10 @@ static PyGetSetDef Container_getseters[] = {
      (getter)Container_state, NULL,
      "Container state",
      NULL},
+    {"last_error", (getter)Container_last_error, NULL,
+     "Get the last error of the container",
+     NULL},
+
     {NULL, NULL, NULL, NULL, NULL}
 };
 
